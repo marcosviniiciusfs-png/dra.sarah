@@ -7,3 +7,5 @@
 @media(max-width:767px){.hero-visual{height:460px}.hero-visual>img,.photo-leaf img{object-position:center 38%}.detail-photo{width:88%;border-radius:140px 140px 3px 3px}.detail-photo img{max-height:460px}.gallery-image{height:460px}.callout-one,.callout-two{font-size:8px}.hero-visual .photo-index{background:#f7f3eeb8;padding:5px}.floating-note{bottom:44px}.photo-leaf:after{border-top-color:#fff1}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}.fold-section{transform:none!important}}
 
+html,body{overflow-x:clip}
+.fold-shell{overflow:clip}
