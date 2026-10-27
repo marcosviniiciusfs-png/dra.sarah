@@ -70,7 +70,7 @@ function loadPhoto(file) {
 }
 document.querySelectorAll('[data-photo]').forEach(async image => {
   const src = await loadPhoto(image.dataset.photo);
-  if (src) { image.src = src; image.alt = 'Modelo com faixa facial pós-operatória preta, com abertura para as orelhas e apoio ao queixo e pescoço'; image.closest('.hero-visual')?.querySelector('.image-status')?.remove(); }
+  if (src) { image.src = src; image.alt = 'Modelo com faixa facial pós-operatória preta, com abertura para as orelhas e apoio ao queixo e pescoço';  }
 });
 const angles = [
   { file:'frente.webp', label:'Frente', text:'O encaixe envolve o queixo. As aberturas laterais acomodam as orelhas.' },
@@ -85,8 +85,8 @@ async function setAngle(index) {
   document.querySelector('#angle-description').textContent = angles[index].text;
   const src = await loadPhoto(angles[index].file);
   if (activeAngle !== index) return;
-  const image = document.querySelector('#angle-photo'); image.src = src || 'assets/img/product.svg';
-  image.alt = src ? `Faixa facial pós-operatória preta vista de ${angles[index].label.toLowerCase()}` : 'Ilustração provisória da faixa facial; foto deste ângulo ainda não adicionada';
+  const image = document.querySelector('#angle-photo'); image.src = src || 'assets/img/perfil.webp';
+  image.alt = src ? `Faixa facial pós-operatória preta vista de ${angles[index].label.toLowerCase()}` : 'Modelo com faixa facial preta';
   document.querySelector('#angle-status').hidden = Boolean(src);
 }
 document.querySelectorAll('[data-angle]').forEach(button => button.addEventListener('click', () => setAngle(Number(button.dataset.angle))));
@@ -114,16 +114,26 @@ if (window.gsap && window.ScrollTrigger) {
       const shade = document.createElement('span'); shade.className = 'fold-shade'; shade.setAttribute('aria-hidden','true'); section.append(shade);
       cleanups.push(() => { shade.remove(); shell.before(section); shell.remove(); });
       if (index > 0) {
-        gsap.fromTo(section, {rotationX:index % 2 ? (mobile ? 5 : 10) : 0,rotationY:index % 2 ? 0 : (mobile ? -4 : -8),opacity:.75}, {rotationX:0,rotationY:0,opacity:1,ease:'none',scrollTrigger:{trigger:shell,start:'top 95%',end:'top 60%',scrub:true}});
-      }
-      // Desktop pinned exit: the full section is read before it folds away.
-      if (!mobile && index < 10) {
-        const tl = gsap.timeline({scrollTrigger:{trigger:section,start:'bottom bottom',end:'+=100',pin:true,pinSpacing:true,scrub:true,invalidateOnRefresh:true}});
-        tl.to(section,{rotationX:index % 2 ? 0 : -5,rotationY:index % 2 ? 4 : 0,transformOrigin:index % 2 ? 'left center' : 'top center',ease:'none'},0).to(shade,{opacity:.8,ease:'none'},0);
+        const vertical = index % 2 === 0;
+        const tl = gsap.timeline({scrollTrigger:{trigger:shell,start:'top 98%',end:mobile?'top 76%':'top 65%',scrub:.65,invalidateOnRefresh:true}});
+        tl.fromTo(section, {rotationX:vertical?0:(mobile?10:18),rotationY:vertical?(mobile?-7:-12):0,transformOrigin:vertical?'left center':'top center',opacity:.68}, {rotationX:0,rotationY:0,opacity:1,ease:'none'},0)
+          .fromTo(shade,{opacity:.85},{opacity:0,ease:'none'},0);
       }
     });
     gsap.utils.toArray('.accordion-fold').forEach(group => {
-      gsap.from(group.children,{rotationX:mobile ? 8 : 24,y:mobile ? 10 : 22,opacity:.35,stagger:.13,ease:'none',scrollTrigger:{trigger:group,start:'top 94%',end:'top 55%',scrub:true}});
+      gsap.from(group.children,{rotationX:mobile ? 18 : 38,y:mobile ? 12 : 24,opacity:.3,stagger:.18,ease:'none',scrollTrigger:{trigger:group,start:'top 94%',end:'top 60%',scrub:.6}});
+    });
+    // Three paper-like image leaves unfold in sequence, with real photographic slices.
+    document.querySelectorAll('.hero-visual,.detail-photo').forEach(stage => {
+      const photo = stage.querySelector('img');
+      const leaves = [];
+      for (let i=0;i<3;i++) {
+        const leaf = document.createElement('div'); leaf.className='photo-leaf'; leaf.setAttribute('aria-hidden','true'); leaf.style.top=`${i*100/3}%`;
+        const image = document.createElement('img'); image.src=photo.src; image.alt=''; image.style.top=`-${i*100}%`; leaf.append(image); stage.append(leaf); leaves.push(leaf);
+      }
+      photo.classList.add('fold-photo-base');
+      gsap.fromTo(leaves,{rotationX:mobile?-48:-72,opacity:.12},{rotationX:0,opacity:1,stagger:.14,duration:.9,ease:'power2.out',scrollTrigger:{trigger:stage,start:'top 94%',toggleActions:'play none none reverse'}});
+      cleanups.push(()=>{leaves.forEach(leaf=>leaf.remove());photo.classList.remove('fold-photo-base');});
     });
     const gallery = document.querySelector('.gallery-sticky');
     if (!mobile) {
@@ -131,7 +141,7 @@ if (window.gsap && window.ScrollTrigger) {
       gsap.to('#angle-photo',{scale:1.04,ease:'none',scrollTrigger:{trigger:gallery,start:'top 70%',end:'bottom top',scrub:true}});
     }
     // Restore wrapper DOM only after GSAP has reverted its pins and transforms.
-    return () => { context.data.forEach(item => { if (item instanceof ScrollTrigger) item.kill(true); }); requestAnimationFrame(() => cleanups.reverse().forEach(fn => fn())); };
+    return () => { cleanups.reverse().forEach(fn => fn()); };
   });
   document.fonts.ready.then(() => ScrollTrigger.refresh());
   window.addEventListener('load', () => ScrollTrigger.refresh(), {once:true});

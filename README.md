@@ -21,3 +21,6 @@ GSAP e ScrollTrigger via CDN. Dobras suaves em eixos alternados e sequência tip
 Sem frameworks, fontes com `display=swap`, dimensões de imagens explícitas, lazy loading abaixo da primeira dobra, links de salto, foco visível e perguntas em elementos `details` nativos.
 
 Não há pontuação Lighthouse certificada. Validar novamente performance e visual após inserir as fotos reais e as integrações comerciais.
+
+
+Atualizacao: imagens fotograficas geradas com IA a partir das referencias do usuario, em tres angulos. Dobras nas fotos em tres faixas e transicoes suaves nas secoes, com versao simplificada para movimento reduzido.
