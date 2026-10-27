@@ -24,3 +24,5 @@ Não há pontuação Lighthouse certificada. Validar novamente performance e vis
 
 
 Atualizacao: imagens fotograficas geradas com IA a partir das referencias do usuario, em tres angulos. Dobras nas fotos em tres faixas e transicoes suaves nas secoes, com versao simplificada para movimento reduzido.
+
+Atualizacao: fotos sem animacao de entrada; galeria sem pin, zoom ou troca ligada ao scroll; passos sem sanfona; textos sobre a primeira foto removidos.

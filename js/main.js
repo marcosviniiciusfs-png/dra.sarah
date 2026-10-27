@@ -109,6 +109,7 @@ if (window.gsap && window.ScrollTrigger) {
     // Fold only a short transition at section boundaries, preserving readable content.
     const cleanups = [];
     gsap.utils.toArray('.fold-section').forEach((section,index) => {
+      if (section.id === 'angulos' || section.id === 'como-usar') return;
       const shell = document.createElement('div'); shell.className = 'fold-shell';
       section.before(shell); shell.append(section);
       const shade = document.createElement('span'); shade.className = 'fold-shade'; shade.setAttribute('aria-hidden','true'); section.append(shade);
@@ -123,23 +124,6 @@ if (window.gsap && window.ScrollTrigger) {
     gsap.utils.toArray('.accordion-fold').forEach(group => {
       gsap.from(group.children,{rotationX:mobile ? 18 : 38,y:mobile ? 12 : 24,opacity:.3,stagger:.18,ease:'none',scrollTrigger:{trigger:group,start:'top 94%',end:'top 60%',scrub:.6}});
     });
-    // Three paper-like image leaves unfold in sequence, with real photographic slices.
-    document.querySelectorAll('.hero-visual,.detail-photo').forEach(stage => {
-      const photo = stage.querySelector('img');
-      const leaves = [];
-      for (let i=0;i<3;i++) {
-        const leaf = document.createElement('div'); leaf.className='photo-leaf'; leaf.setAttribute('aria-hidden','true'); leaf.style.top=`${i*100/3}%`;
-        const image = document.createElement('img'); image.src=photo.src; image.alt=''; image.style.top=`-${i*100}%`; leaf.append(image); stage.append(leaf); leaves.push(leaf);
-      }
-      photo.classList.add('fold-photo-base');
-      gsap.fromTo(leaves,{rotationX:mobile?-48:-72,opacity:.12},{rotationX:0,opacity:1,stagger:.14,duration:.9,ease:'power2.out',scrollTrigger:{trigger:stage,start:'top 94%',toggleActions:'play none none reverse'}});
-      cleanups.push(()=>{leaves.forEach(leaf=>leaf.remove());photo.classList.remove('fold-photo-base');});
-    });
-    const gallery = document.querySelector('.gallery-sticky');
-    if (!mobile) {
-      ScrollTrigger.create({trigger:gallery,start:'top 10%',end:'+=550',pin:true,scrub:true,onUpdate:self => setAngle(Math.min(2,Math.floor(self.progress * 3)))});
-      gsap.to('#angle-photo',{scale:1.04,ease:'none',scrollTrigger:{trigger:gallery,start:'top 70%',end:'bottom top',scrub:true}});
-    }
     // Restore wrapper DOM only after GSAP has reverted its pins and transforms.
     return () => { cleanups.reverse().forEach(fn => fn()); };
   });

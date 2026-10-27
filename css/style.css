@@ -9,3 +9,4 @@
 
 html,body{overflow-x:clip}
 .fold-shell{overflow:clip}
+.photo-credit{font-size:9px;color:var(--muted);margin:20px 0 0}.gallery-sticky,.gallery-image,.gallery-image img{transform:none!important}.steps article{transform:none!important;opacity:1!important}
