@@ -117,12 +117,12 @@ if (window.gsap && window.ScrollTrigger) {
       if (index > 0) {
         const vertical = index % 2 === 0;
         const tl = gsap.timeline({scrollTrigger:{trigger:shell,start:'top 98%',end:mobile?'top 76%':'top 65%',scrub:.65,invalidateOnRefresh:true}});
-        tl.fromTo(section, {rotationX:vertical?0:(mobile?10:18),rotationY:vertical?(mobile?-7:-12):0,transformOrigin:vertical?'left center':'top center',opacity:.68}, {rotationX:0,rotationY:0,opacity:1,ease:'none'},0)
+        tl.fromTo(section, {rotationX:(!vertical&&!mobile)?18:0,rotationY:(vertical&&!mobile)?-12:0,transformOrigin:vertical?'left center':'top center',opacity:.68}, {rotationX:0,rotationY:0,opacity:1,ease:'none'},0)
           .fromTo(shade,{opacity:.85},{opacity:0,ease:'none'},0);
       }
     });
     gsap.utils.toArray('.accordion-fold').forEach(group => {
-      gsap.from(group.children,{rotationX:mobile ? 18 : 38,y:mobile ? 12 : 24,opacity:.3,stagger:.18,ease:'none',scrollTrigger:{trigger:group,start:'top 94%',end:'top 60%',scrub:.6}});
+      gsap.from(group.children,{rotationX:mobile ? 0 : 38,y:mobile ? 12 : 24,opacity:.3,stagger:.18,ease:'none',scrollTrigger:{trigger:group,start:'top 94%',end:'top 60%',scrub:.6}});
     });
     // Restore wrapper DOM only after GSAP has reverted its pins and transforms.
     return () => { cleanups.reverse().forEach(fn => fn()); };
