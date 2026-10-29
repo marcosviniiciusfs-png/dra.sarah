@@ -78,18 +78,30 @@ const angles = [
   { file:'perfil.webp', label:'Perfil', text:'O fecho em velcro no topo permite adaptar o encaixe conforme a orientação do cirurgião.' }
 ];
 let activeAngle = -1;
+let stickyST = null;
+const fadeTargets = () => [document.querySelector('#angle-photo'), document.querySelector('#angle-description')];
 async function setAngle(index) {
   if (index === activeAngle) return;
+  const first = activeAngle === -1;
   activeAngle = index;
   document.querySelectorAll('[data-angle]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.angle) === index)));
-  document.querySelector('#angle-description').textContent = angles[index].text;
-  const src = await loadPhoto(angles[index].file);
+  if (!first) { fadeTargets().forEach(el => el.style.opacity = 0); }
+  const [src] = await Promise.all([loadPhoto(angles[index].file), first ? null : new Promise(r => setTimeout(r, 220))]);
   if (activeAngle !== index) return;
-  const image = document.querySelector('#angle-photo'); image.src = src || 'assets/img/perfil.webp';
+  const [image, description] = fadeTargets();
+  description.textContent = angles[index].text;
+  image.src = src || 'assets/img/perfil.webp';
   image.alt = src ? `Faixa facial pós-operatória preta vista de ${angles[index].label.toLowerCase()}` : 'Modelo com faixa facial preta';
   document.querySelector('#angle-status').hidden = Boolean(src);
+  fadeTargets().forEach(el => el.style.opacity = 1);
 }
-document.querySelectorAll('[data-angle]').forEach(button => button.addEventListener('click', () => setAngle(Number(button.dataset.angle))));
+document.querySelectorAll('[data-angle]').forEach(button => button.addEventListener('click', () => {
+  const index = Number(button.dataset.angle);
+  if (!stickyST) { setAngle(index); return; }
+  // Com a galeria sticky, o botão rola até o trecho do ângulo para não ser desfeito pela rolagem.
+  const target = stickyST.start + (stickyST.end - stickyST.start) * (index + .5) / angles.length;
+  window.scrollTo({top: target, behavior: 'smooth'});
+}));
 setAngle(0);
 const reviewPlaceholders = ['Cada recuperação tem sua própria história.', 'O cuidado também está em ouvir.', 'Uma experiência de cada vez.'];
 let reviewIndex = 0;
@@ -102,30 +114,24 @@ if (window.gsap && window.ScrollTrigger) {
   const mm = gsap.matchMedia();
   mm.add({desktop:'(min-width: 768px)',mobile:'(max-width: 767px)',reduced:'(prefers-reduced-motion: reduce)'}, context => {
     const {mobile,reduced} = context.conditions;
-    if (reduced) {
-      gsap.utils.toArray('.section').forEach(section => gsap.from(section, {opacity:.7,duration:.2,scrollTrigger:{trigger:section,start:'top 95%',once:true}}));
-      return;
-    }
-    // Fold only a short transition at section boundaries, preserving readable content.
-    const cleanups = [];
-    gsap.utils.toArray('.fold-section').forEach((section,index) => {
-      if (section.id === 'angulos' || section.id === 'como-usar') return;
-      const shell = document.createElement('div'); shell.className = 'fold-shell';
-      section.before(shell); shell.append(section);
-      const shade = document.createElement('span'); shade.className = 'fold-shade'; shade.setAttribute('aria-hidden','true'); section.append(shade);
-      cleanups.push(() => { shade.remove(); shell.before(section); shell.remove(); });
-      if (index > 0) {
-        const vertical = index % 2 === 0;
-        const tl = gsap.timeline({scrollTrigger:{trigger:shell,start:'top 98%',end:mobile?'top 76%':'top 65%',scrub:.65,invalidateOnRefresh:true}});
-        tl.fromTo(section, {rotationX:(!vertical&&!mobile)?18:0,rotationY:(vertical&&!mobile)?-12:0,transformOrigin:vertical?'left center':'top center',opacity:.68}, {rotationX:0,rotationY:0,opacity:1,ease:'none'},0)
-          .fromTo(shade,{opacity:.85},{opacity:0,ease:'none'},0);
-      }
+    if (reduced) return; // Sem animação: conteúdo estático e galeria navegável pelos botões.
+    // 1) Fade-in com subida suave: cada bloco entra uma vez, sem rotação nem parallax.
+    const y = mobile ? 16 : 28;
+    const reveal = (targets, trigger, stagger = 0) => gsap.from(targets, {opacity:0, y, duration:.9, ease:'power2.out', stagger, clearProps:'opacity,transform', scrollTrigger:{trigger, start:'top 88%', once:true}});
+    ['#indicacoes','#detalhes','#como-usar'].forEach(id => {
+      const section = document.querySelector(id);
+      if (!section) return;
+      reveal(section.querySelectorAll('.section-top, .heading-row, :scope > h2, :scope > .eyebrow'), section);
+      section.querySelectorAll('.procedure-grid, .details-layout, .steps').forEach(group => {
+        const items = group.matches('.details-layout') ? group.children : group.querySelectorAll(':scope > article');
+        reveal(items, group, .14);
+      });
     });
-    gsap.utils.toArray('.accordion-fold').forEach(group => {
-      gsap.from(group.children,{rotationX:mobile ? 0 : 38,y:mobile ? 12 : 24,opacity:.3,stagger:.18,ease:'none',scrollTrigger:{trigger:group,start:'top 94%',end:'top 60%',scrub:.6}});
-    });
-    // Restore wrapper DOM only after GSAP has reverted its pins and transforms.
-    return () => { cleanups.reverse().forEach(fn => fn()); };
+    // 2) Galeria sticky: a imagem fica fixa e o ângulo/texto muda conforme a rolagem.
+    const gallery = document.querySelector('#angulos');
+    gallery.classList.add('sticky-on');
+    stickyST = ScrollTrigger.create({trigger:gallery, start:'top top', end:'bottom bottom', onUpdate:self => setAngle(Math.min(angles.length - 1, Math.floor(self.progress * angles.length)))});
+    return () => { gallery.classList.remove('sticky-on'); stickyST = null; };
   });
   document.fonts.ready.then(() => ScrollTrigger.refresh());
   window.addEventListener('load', () => ScrollTrigger.refresh(), {once:true});
