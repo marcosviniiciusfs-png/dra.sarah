@@ -187,3 +187,5 @@ dialog h2{font-size:28px}dialog p{color:var(--muted)}
   dialog{padding:30px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.card:nth-child(3) .card-photo img{object-position:center 30%}
