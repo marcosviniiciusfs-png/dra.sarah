@@ -1,13 +1,46 @@
-/* EDITAR AQUI: número com DDI+DDD (somente dígitos), preços, checkout, redes e IDs. */
+/* EDITAR AQUI: tudo o que ainda falta definir. Campo vazio = o trecho correspondente fica oculto na página.
+   Textos prontos (ex.: price1: 'R$ 197,00') aparecem exatamente como escritos. */
 const CONFIG = {
-  whatsapp: '', // Ex.: 5511999999999. Vazio abre aviso, nunca número fictício.
-  checkout: '', // Se vazio, o pedido é encaminhado ao WhatsApp configurado.
+  whatsapp: '', // DDI+DDD+número, só dígitos. Ex.: 5511999999999. Vazio abre aviso, nunca número fictício.
+  checkout: '', // URL do checkout. Se vazio, o pedido é encaminhado ao WhatsApp configurado.
   instagram: '',
   metaPixelId: '',
   googleTagId: '',
-  policy: '', // URL da política de trocas definitiva.
-  privacy: ''
+  policy: '', // URL da página de trocas e devoluções.
+  privacy: '', // URL da política de privacidade.
+  terms: '', // URL dos termos de uso.
+  // Preços e condições
+  price1: '', price1Detail: '', // ex.: 'R$ 197,00' e 'ou 3x de R$ 65,67'
+  price2: '', price2Save: '',   // ex.: 'R$ 337,00' e 'economize R$ 57,00'
+  price3: '', price3Save: '',   // opcional: kit com 3
+  pix: '',                      // ex.: '5% off no Pix'
+  payments: '',                 // ex.: 'Pix, cartão em até 3x e boleto'
+  shipDays: '',                 // ex.: '2' (dias úteis para postagem)
+  returnPolicy: '',             // frase curta da política de troca
+  sizeExchange: '',             // frase da troca de tamanho, se a política permitir
+  // Produto (confirmar com o fornecedor)
+  washable: '', fabric: '', closure: '', washing: '', box: '', heat: '', men: '',
+  // Tabela de medidas
+  howToMeasure: '', sizeBetween: '', sizeP: '', sizeM: '', sizeG: '',
+  // Prova social (somente dados reais e autorizados)
+  rating: '', customers: '',
+  testimonials: [], // [{name:'Maria, Barueri', procedure:'Lipo de papada', text:'...'}] — mínimo 3 para a seção aparecer
+  // Rodapé
+  company: '', cnpj: '', address: '', email: '', hours: '', invoice: ''
 };
+document.querySelectorAll('[data-cfg]').forEach(el => { el.textContent = CONFIG[el.dataset.cfg] || ''; });
+document.querySelectorAll('[data-if]').forEach(el => { if (!CONFIG[el.dataset.if]) el.hidden = true; });
+if (Array.isArray(CONFIG.testimonials) && CONFIG.testimonials.length >= 3) {
+  const list = document.querySelector('#testimonial-list');
+  CONFIG.testimonials.forEach(t => {
+    const card = document.createElement('article'); card.className = 'card';
+    const quote = document.createElement('p'); quote.textContent = `“${t.text}”`;
+    const who = document.createElement('h3'); who.textContent = t.name;
+    const proc = document.createElement('p'); proc.className = 'note'; proc.textContent = t.procedure || '';
+    card.append(quote, who, proc); list.append(card);
+  });
+  document.querySelector('#depoimentos').hidden = false;
+}
 const dialog = document.querySelector('#info-dialog');
 function showInfo(title, message) {
   document.querySelector('#dialog-title').textContent = title;
@@ -38,9 +71,9 @@ document.querySelectorAll('[data-buy]').forEach(button => button.addEventListene
   window.open(destination, '_blank', 'noopener,noreferrer');
 }));
 document.querySelectorAll('[data-info]').forEach(button => button.addEventListener('click', () => {
-  const urls = {social: CONFIG.instagram, policy: CONFIG.policy, privacy: CONFIG.privacy};
+  const urls = {social: CONFIG.instagram, policy: CONFIG.policy, privacy: CONFIG.privacy, terms: CONFIG.terms};
   if (urls[button.dataset.info]) { window.open(urls[button.dataset.info], '_blank', 'noopener,noreferrer'); return; }
-  const content = {social:['Acompanhe nosso cuidado.', 'O perfil oficial da loja será adicionado em breve.'],policy:['Trocas e devoluções.', 'A política comercial está em preparação. Consulte as condições de troca, devolução e atendimento antes de finalizar sua compra.'],privacy:['Sua privacidade.', 'Esta página não possui formulário nem grava dados de clientes no navegador. Quando o WhatsApp for configurado, o contato abrirá em um serviço externo. Os rastreadores de anúncios estão desativados até a configuração de consentimento e da política de privacidade.']};
+  const content = {social:['Acompanhe nosso cuidado.', 'O perfil oficial da loja será adicionado em breve.'],policy:['Trocas e devoluções.', 'A política comercial está em preparação. Consulte as condições de troca, devolução e atendimento antes de finalizar sua compra.'],terms:['Termos de uso.', 'Os termos de uso estão em preparação e serão publicados antes da abertura das vendas.'],privacy:['Sua privacidade.', 'Esta página não possui formulário nem grava dados de clientes no navegador. Quando o WhatsApp for configurado, o contato abrirá em um serviço externo. Os rastreadores de anúncios estão desativados até a configuração de consentimento e da política de privacidade.']};
   showInfo(...content[button.dataset.info]);
 }));
 document.querySelector('#year').textContent = new Date().getFullYear();
@@ -61,77 +94,23 @@ window.enableMarketingTracking = function () {
     window.gtag('js', new Date()); window.gtag('config', CONFIG.googleTagId);
   }
 };
-// Fotos reais: colocar perfil.webp, frente.webp e tres-quartos.webp em assets/img.
-// O fallback evita imagens quebradas enquanto os arquivos não estiverem disponíveis.
-const photoCache = new Map();
-function loadPhoto(file) {
-  if (!photoCache.has(file)) photoCache.set(file, new Promise(resolve => { const image = new Image(); image.onload = () => resolve(image.src); image.onerror = () => resolve(null); image.src = `assets/img/${file}`; }));
-  return photoCache.get(file);
+// Barra fixa no celular: aparece depois que a cliente rola além do hero.
+const bar = document.querySelector('#mobile-bar');
+const hero = document.querySelector('#inicio');
+if (bar && hero && 'IntersectionObserver' in window) {
+  new IntersectionObserver(([entry]) => bar.classList.toggle('show', !entry.isIntersecting && entry.boundingClientRect.top < 0)).observe(hero);
 }
-document.querySelectorAll('[data-photo]').forEach(async image => {
-  const src = await loadPhoto(image.dataset.photo);
-  if (src) { image.src = src; image.alt = 'Modelo com faixa facial pós-operatória preta, com abertura para as orelhas e apoio ao queixo e pescoço';  }
-});
-const angles = [
-  { file:'frente.webp', label:'Frente', text:'O encaixe envolve o queixo. As aberturas laterais acomodam as orelhas.' },
-  { file:'tres-quartos.webp', label:'Três quartos', text:'O tecido macio e elástico acompanha a região do queixo e as laterais da face.' },
-  { file:'perfil.webp', label:'Perfil', text:'O fecho em velcro no topo permite adaptar o encaixe conforme a orientação do cirurgião.' }
-];
-let activeAngle = -1;
-let stickyST = null;
-const fadeTargets = () => [document.querySelector('#angle-photo'), document.querySelector('#angle-description')];
-async function setAngle(index) {
-  if (index === activeAngle) return;
-  const first = activeAngle === -1;
-  activeAngle = index;
-  document.querySelectorAll('[data-angle]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.angle) === index)));
-  if (!first) { fadeTargets().forEach(el => el.style.opacity = 0); }
-  const [src] = await Promise.all([loadPhoto(angles[index].file), first ? null : new Promise(r => setTimeout(r, 220))]);
-  if (activeAngle !== index) return;
-  const [image, description] = fadeTargets();
-  description.textContent = angles[index].text;
-  image.src = src || 'assets/img/perfil.webp';
-  image.alt = src ? `Faixa facial pós-operatória preta vista de ${angles[index].label.toLowerCase()}` : 'Modelo com faixa facial preta';
-  document.querySelector('#angle-status').hidden = Boolean(src);
-  fadeTargets().forEach(el => el.style.opacity = 1);
-}
-document.querySelectorAll('[data-angle]').forEach(button => button.addEventListener('click', () => {
-  const index = Number(button.dataset.angle);
-  if (!stickyST) { setAngle(index); return; }
-  // Com a galeria sticky, o botão rola até o trecho do ângulo para não ser desfeito pela rolagem.
-  const target = stickyST.start + (stickyST.end - stickyST.start) * (index + .5) / angles.length;
-  window.scrollTo({top: target, behavior: 'smooth'});
-}));
-setAngle(0);
-const reviewPlaceholders = ['Cada recuperação tem sua própria história.', 'O cuidado também está em ouvir.', 'Uma experiência de cada vez.'];
-let reviewIndex = 0;
-function changeReview(direction) { reviewIndex = (reviewIndex + direction + 3) % 3; document.querySelector('#review-text').textContent = reviewPlaceholders[reviewIndex]; document.querySelector('#review-count').textContent = `0${reviewIndex + 1} / 03`; }
-document.querySelector('#review-prev').addEventListener('click', () => changeReview(-1));
-document.querySelector('#review-next').addEventListener('click', () => changeReview(1));
-// A página continua totalmente legível se a CDN de animação não carregar.
+// Fade-in suave com subida (sem rotação nem parallax). A página continua legível se a CDN não carregar.
 if (window.gsap && window.ScrollTrigger) {
   gsap.registerPlugin(ScrollTrigger);
   const mm = gsap.matchMedia();
   mm.add({desktop:'(min-width: 768px)',mobile:'(max-width: 767px)',reduced:'(prefers-reduced-motion: reduce)'}, context => {
     const {mobile,reduced} = context.conditions;
-    if (reduced) return; // Sem animação: conteúdo estático e galeria navegável pelos botões.
-    // 1) Fade-in com subida suave: cada bloco entra uma vez, sem rotação nem parallax.
+    if (reduced) return;
     const y = mobile ? 16 : 28;
     const reveal = (targets, trigger, stagger = 0) => gsap.from(targets, {opacity:0, y, duration:.9, ease:'power2.out', stagger, clearProps:'opacity,transform', scrollTrigger:{trigger, start:'top 88%', once:true}});
-    ['#indicacoes','#detalhes','#como-usar'].forEach(id => {
-      const section = document.querySelector(id);
-      if (!section) return;
-      reveal(section.querySelectorAll('.section-top, .heading-row, :scope > h2, :scope > .eyebrow'), section);
-      section.querySelectorAll('.procedure-grid, .details-layout, .steps').forEach(group => {
-        const items = group.matches('.details-layout') ? group.children : group.querySelectorAll(':scope > article');
-        reveal(items, group, .14);
-      });
-    });
-    // 2) Galeria sticky: a imagem fica fixa e o ângulo/texto muda conforme a rolagem.
-    const gallery = document.querySelector('#angulos');
-    gallery.classList.add('sticky-on');
-    stickyST = ScrollTrigger.create({trigger:gallery, start:'top top', end:'bottom bottom', onUpdate:self => setAngle(Math.min(angles.length - 1, Math.floor(self.progress * angles.length)))});
-    return () => { gallery.classList.remove('sticky-on'); stickyST = null; };
+    gsap.utils.toArray('[data-reveal]').forEach(el => reveal(el, el));
+    gsap.utils.toArray('[data-reveal-group]').forEach(group => reveal(group.children, group, .14));
   });
   document.fonts.ready.then(() => ScrollTrigger.refresh());
   window.addEventListener('load', () => ScrollTrigger.refresh(), {once:true});
