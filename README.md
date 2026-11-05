@@ -1,4 +1,4 @@
-# Melhor em Cintas — landing page
+# Face Cintas — landing page
 
 Página estática em HTML, CSS e JavaScript. Abra `index.html` para uma revisão local ou sirva esta pasta com qualquer servidor HTTP. Para Cloudflare Pages ou GitHub Pages, publique `index.html`, `css`, `js` e `assets`, sem etapa de compilação. O diretório `dist` é uma cópia pronta para publicação no Sites.
 

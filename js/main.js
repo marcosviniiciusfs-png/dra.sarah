@@ -10,7 +10,7 @@ const CONFIG = {
   privacy: '', // URL da política de privacidade.
   terms: '', // URL dos termos de uso.
   // Preços e condições
-  price1: '', price1Detail: '', // ex.: 'R$ 197,00' e 'ou 3x de R$ 65,67'
+  price1: 'R$ 139,90', price1Detail: '', // ex.: 'R$ 197,00' e 'ou 3x de R$ 65,67'
   price2: '', price2Save: '',   // ex.: 'R$ 337,00' e 'economize R$ 57,00'
   price3: '', price3Save: '',   // opcional: kit com 3
   pix: '',                      // ex.: '5% off no Pix'
